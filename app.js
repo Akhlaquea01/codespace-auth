@@ -7,6 +7,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const user = require("./model/user");
 const cookieParser = require("cookie-parser");
+const auth = require("./middleware/auth");
 
 const app = express();
 app.use(express.json());
@@ -76,19 +77,26 @@ app.post("/login", async (req, res) => {
       });
       user.token = token;
       user.password = undefined;
+      // }
+      // send a token in user cookie
+      const options = {
+        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+      };
+      // const token = user.token;
+      res.status(200).cookie("token", token, options).json({
+        success: true,
+        token,
+        user,
+      });
     }
-    // send a token in user cookie
-    const options = {
-      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-    };
-    res.status(200).cookie("token", token, options).json({
-      success: true,
-      token,
-      user,
-    });
   } catch (error) {
     console.log(error);
   }
+});
+
+app.get("/dashboard", auth, (req, res) => {
+  console.log(req.user);
+  res.send("welcome to dashboard");
 });
 module.exports = app;
